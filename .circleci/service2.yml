@@ -6,7 +6,7 @@ parameters:
     default: false
 
 jobs:
-  deploy-dev:
+  service2-deploy-dev:
     docker:
       - image: << pipeline.parameters.node-image >>
     steps:
@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Deploy Dev
           command: echo Service 2 deployed to dev
-  deploy-prod:
+  service2-deploy-prod:
     docker:
       - image: << pipeline.parameters.node-image >>
     steps:
@@ -32,7 +32,7 @@ workflows:
     when: << pipeline.parameters.service2 >>
     jobs:
       - common-install-dependencies
-      - deploy-dev:
+      - service2-deploy-dev:
           requires:
             - common-install-dependencies
           filters:
@@ -45,7 +45,7 @@ workflows:
           filters:
             branches:
               only: main
-      - deploy-prod:
+      - service2-deploy-prod:
           requires:
             - request-approval
           filters:
