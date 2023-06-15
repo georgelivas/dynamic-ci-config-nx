@@ -1,7 +1,7 @@
 version: 2.1
 
 parameters:
-  service1:
+  service_a:
     type: boolean
     default: false
 
@@ -29,7 +29,7 @@ jobs:
 
 workflows:
   services:
-    when: << pipeline.parameters.service1 >>
+    when: << pipeline.parameters.service_a >>
     jobs:
       - common-install-dependencies
       - service1-deploy-dev:

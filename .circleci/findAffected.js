@@ -9,8 +9,8 @@ const projects = execSync(
   .split(', ');
 
 const toRun = {
-  service1: projects.some((app) => app.includes('dynamic-config')),
-  service2: projects.some((app) => app.includes('service-b')),
+  service_a: projects.some((app) => app.includes('dynamic-config')),
+  service_b: projects.some((app) => app.includes('service-b')),
 };
 
 const json = JSON.stringify(toRun);
