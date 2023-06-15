@@ -41,7 +41,7 @@ workflows:
       - request-approval:
           type: approval
           requires:
-            - deploy-dev
+            - service1-deploy-dev
           filters:
             branches:
               only: main
