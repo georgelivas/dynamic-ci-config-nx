@@ -1,0 +1,89 @@
+version: 2.1
+
+setup: true
+
+orbs:
+  nx: nrwl/nx@1.5.1
+  continuation: circleci/continuation@0.4.0
+  split-config: bufferings/split-config@0.1.0
+
+parameters:
+  node-image:
+    type: string
+    default: 'cimg/node:14.18.1'
+
+jobs:
+  lint:
+    docker:
+      - image: << pipeline.parameters.node-image >>
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - restore_cache:
+          key: v1-deps-{{ checksum "yarn.lock" }}
+      - run:
+          run: Check NPM user
+          command: whoami
+      - run:
+          name: install dependencies
+          command: yarn
+      - nx/set-shas
+      - run:
+          name: Print affected
+          command: yarn nx print-affected --select="projects" --base=<< pipeline.git.base_revision >> --head=HEAD
+      - run:
+          name: Lint
+          command: yarn nx format:check
+      - save_cache:
+          key: v1-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+
+  setup:
+    docker:
+      - image: << pipeline.parameters.node-image >>
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Print affected
+          command: yarn nx print-affected --select="projects" --base=<< pipeline.git.base_revision >> --head=HEAD
+      - run:
+          name: Generate affected.json
+          command: BASE=<< pipeline.git.base_revision >> HEAD=HEAD node ./.circleci/findAffected.js
+      - continuation/continue:
+          parameters: affected.json
+          configuration_path: ./.circleci/generated_config.yml
+      - save_cache:
+          key: v1-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+
+workflows:
+  setup:
+    jobs:
+      - split-config/generate-config:
+          continuation: false
+          generated-config-path: ./.circleci/generated_config.yml
+          post-steps:
+            - persist_to_workspace:
+                root: ~/project
+                paths:
+                  - .
+          fixed-config-paths: |
+            ./.circleci/common.yml
+            ./.circleci/services.yml
+      - lint:
+          requires:
+            - split-config/generate-config
+      - setup:
+          requires:
+            - lint

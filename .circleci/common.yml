@@ -1,0 +1,42 @@
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.5.1
+
+parameters:
+  node-image:
+    type: string
+    default: 'cimg/node:14.18.1'
+
+jobs:
+  common-install-dependencies:
+    docker:
+      - image: << pipeline.parameters.node-image >>
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-deps-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: yarn
+      - save_cache:
+          key: v1-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+  common-lint:
+    docker:
+      - image: << pipeline.parameters.node-image >>
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - nx/set-shas
+      - run:
+          name: Print affected
+          command: yarn nx print-affected --select="projects" --base=<< pipeline.git.base_revision >> --head=HEAD
+      - run:
+          name: Lint
+          command: yarn nx format:check

@@ -1,0 +1,53 @@
+version: 2.1
+
+parameters:
+  service1:
+    type: boolean
+    default: false
+
+jobs:
+  deploy-dev:
+    docker:
+      - image: << pipeline.parameters.node-image >>
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - nx/set-shas
+      - run:
+          name: Deploy Dev
+          command: echo Service 1 deployed to dev
+  deploy-prod:
+    docker:
+      - image: << pipeline.parameters.node-image >>
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - nx/set-shas
+      - run:
+          name: Deploy Prod
+          command: echo Service 1 deployed to prod
+
+workflows:
+  services:
+    when: << pipeline.parameters.service1 >>
+    jobs:
+      - common-install-dependencies
+      - deploy-dev:
+          requires:
+            - common-install-dependencies
+          filters:
+            branches:
+              only: main
+      - request-approval:
+          type: approval
+          requires:
+            - deploy-dev
+          filters:
+            branches:
+              only: main
+      - deploy-prod:
+          requires:
+            - request-approval
+          filters:
+            branches:
+              only: main
