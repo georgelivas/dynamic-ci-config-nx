@@ -28,7 +28,7 @@ jobs:
           command: echo Service 1 deployed to prod
 
 workflows:
-  services:
+  service1:
     when: << pipeline.parameters.service_name >>
     jobs:
       - common-install-dependencies
