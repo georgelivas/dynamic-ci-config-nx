@@ -80,7 +80,8 @@ workflows:
                   - .
           fixed-config-paths: |
             ./.circleci/common.yml
-            ./.circleci/services.yml
+            ./.circleci/service1.yml
+            ./.circleci/service2.yml
       - lint:
           requires:
             - split-config/generate-config
